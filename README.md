@@ -43,6 +43,10 @@ Enviar el token en las demás solicitudes:
 Authorization: Bearer <token>
 ```
 
+Las operaciones de escritura también requieren el encabezado `X-XSRF-TOKEN`,
+tomado de la cookie `XSRF-TOKEN` emitida por la API. Esta protección se suma al
+token JWT y a la lista explícita de orígenes permitidos.
+
 ## Endpoints
 
 | Recurso | Endpoints principales |

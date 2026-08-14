@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rectificadora
+      POSTGRES_USER: rectificadora
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rectificadora}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rectificadora"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/rectificadora
+      DB_USER: rectificadora
+      DB_PASSWORD: ${DB_PASSWORD:-rectificadora}
+      JWT_SECRET: ${JWT_SECRET:-cambiar-esta-clave-de-desarrollo-por-una-de-32-caracteres}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    ports:
+      - "8080:8080"
+volumes:
+  postgres_data:
