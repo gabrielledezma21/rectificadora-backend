@@ -9,4 +9,6 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
   @Query("select distinct w from WorkOrder w left join fetch w.items left join fetch w.payments where w.id=:id") Optional<WorkOrder> findDetailedById(@Param("id") UUID id);
   @Query("select w from WorkOrder w where lower(w.client.name) like lower(concat('%',:q,'%')) or lower(w.orderNumber) like lower(concat('%',:q,'%')) order by w.createdAt desc") List<WorkOrder> search(@Param("q") String q);
   List<WorkOrder> findByCreatedAtBetweenOrderByCreatedAtDesc(Instant from, Instant to);
+  long countByClientId(UUID clientId);
+  @Query(value="select nextval('work_order_number_seq')",nativeQuery=true) long nextOrderSequence();
 }

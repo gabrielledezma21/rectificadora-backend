@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.cors.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -21,10 +22,16 @@ import java.util.List;
 public class SecurityConfig {
   @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
   @Bean AuthenticationManager authenticationManager(AuthenticationConfiguration c) throws Exception { return c.getAuthenticationManager(); }
+  @Bean CorsConfigurationSource corsConfigurationSource(@Value("${app.cors-origins}") List<String> origins) {
+    var config = new CorsConfiguration();
+    config.setAllowedOrigins(origins); config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+    config.setAllowedHeaders(List.of("Authorization","Content-Type","X-XSRF-TOKEN")); config.setAllowCredentials(true); config.setMaxAge(3600L);
+    var source = new UrlBasedCorsConfigurationSource(); source.registerCorsConfiguration("/api/**", config); return source;
+  }
   @Bean JwtDecoder jwtDecoder(@Value("${app.jwt-secret}") String secret) { return NimbusJwtDecoder.withSecretKey(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256")).build(); }
   @Bean JwtEncoder jwtEncoder(@Value("${app.jwt-secret}") String secret) { return new NimbusJwtEncoder(new ImmutableSecret<>(secret.getBytes(StandardCharsets.UTF_8))); }
   @Bean SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    return http.csrf(csrf -> csrf
+    return http.cors(cors -> {}).csrf(csrf -> csrf
         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         .ignoringRequestMatchers("/api/auth/login"))
       .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

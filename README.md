@@ -14,6 +14,7 @@ API REST para el taller de rectificación. Construida con Java 21, Spring Boot 3
 - Auditoría persistente.
 - Migraciones de base de datos y manejo uniforme de errores.
 - Docker Compose para API + PostgreSQL.
+- Exportación administrativa y respaldo diario automático con retención de 30 días.
 
 ## Arranque rápido con Docker
 
@@ -44,30 +45,51 @@ Authorization: Bearer <token>
 ```
 
 Las operaciones de escritura también requieren el encabezado `X-XSRF-TOKEN`,
-tomado de la cookie `XSRF-TOKEN` emitida por la API. Esta protección se suma al
-token JWT y a la lista explícita de orígenes permitidos.
+tomado de la cookie `XSRF-TOKEN` emitida por la API. Los orígenes autorizados se
+configuran explícitamente mediante `CORS_ORIGINS`.
 
 ## Endpoints
 
 | Recurso | Endpoints principales |
 |---|---|
 | Autenticación | `POST /api/auth/login` |
-| Clientes | `GET/POST /api/clients`, `GET/PUT /api/clients/{id}` |
+| Clientes | `GET/POST /api/clients`, `GET/PUT/DELETE /api/clients/{id}` |
 | Tareas | `GET/POST /api/tasks`, `PUT /api/tasks/{id}` |
 | Órdenes | `GET/POST /api/orders`, `GET/PUT /api/orders/{id}` |
 | Estado | `PATCH /api/orders/{id}/status?value=EN_PROCESO` |
 | Pagos | `POST /api/orders/{id}/payments` |
-| Usuarios | `GET/POST /api/users`, `PUT /api/users/{id}` |
+| Usuarios | `GET/POST /api/users`, `PUT/DELETE /api/users/{id}` |
 | Estadísticas | `GET /api/statistics?year=2026&month=8` |
 | Auditoría | `GET /api/audit` |
+| Exportación | `GET /api/backups` |
 
 ## Conexión del frontend
 
-Configurar en React la URL base como `http://IP-DE-LA-PC-SERVIDOR:8080/api`. El frontend debe reemplazar el acceso a `localStorage` por llamadas HTTP y conservar solamente el token de sesión. `CORS_ORIGINS` debe incluir las direcciones desde las cuales se abre React.
+Configurar en React la URL base como `http://IP-DE-LA-PC-SERVIDOR:8080/api`.
+El modo conectado utiliza la API para clientes, órdenes, pagos, estadísticas,
+usuarios, auditoría y respaldos; el navegador conserva solamente la sesión.
+`CORS_ORIGINS` debe incluir `http://IP-DE-LA-PC-SERVIDOR:3000` y cualquier otra
+dirección real desde la que se abra React.
+
+## Respaldos
+
+El servicio `backup` crea un archivo PostgreSQL comprimido en `./backups` al
+iniciar y luego cada 24 horas. Conserva los últimos 30 días. Además, un
+administrador puede descargar una exportación JSON desde la interfaz.
+
+Para restaurar una copia completa:
+
+```bash
+chmod +x scripts/restaurar-respaldo.sh
+./scripts/restaurar-respaldo.sh backups/rectificadora-AAAAMMDD-HHMMSS.dump
+```
+
+La restauración reemplaza los datos actuales, por lo que debe hacerse con el
+taller detenido y después de conservar una copia reciente.
 
 ## Producción
 
 - Cambiar `DB_PASSWORD`, `JWT_SECRET` y la contraseña inicial.
-- No publicar PostgreSQL (`5432`) hacia Internet.
+- PostgreSQL no publica el puerto `5432` en Docker Compose.
 - Usar HTTPS mediante un proxy inverso si se instala en una VM.
 - Realizar copias periódicas con `pg_dump`.
