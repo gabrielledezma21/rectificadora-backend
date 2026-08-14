@@ -2,9 +2,9 @@ spring:
   application:
     name: gestion-ordenes-backend
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/rectificadora}
-    username: ${DB_USER:rectificadora}
-    password: ${DB_PASSWORD:rectificadora}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -18,5 +18,6 @@ server:
   error:
     include-message: always
 app:
-  jwt-secret: ${JWT_SECRET:cambiar-esta-clave-de-desarrollo-por-una-de-32-caracteres}
-  cors-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+  jwt-secret: ${JWT_SECRET}
+  admin-email: ${ADMIN_EMAIL:}
+  admin-password: ${ADMIN_PASSWORD:}

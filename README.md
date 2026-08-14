@@ -22,19 +22,19 @@ API REST para el taller de rectificación. Construida con Java 21, Spring Boot 3
 3. La API queda disponible en `http://localhost:8080`.
 4. Verificar con `GET http://localhost:8080/api/health`.
 
-Usuario inicial de desarrollo:
+Con `SPRING_PROFILES_ACTIVE=demo` se cargan automáticamente clientes, vehículos,
+órdenes, tareas y pagos ficticios. Para una instalación real, usar
+`SPRING_PROFILES_ACTIVE=prod`; los datos de ejemplo no se cargarán.
 
-- Email: `admin@taller.com`
-- Contraseña: `admin123`
-
-Debe cambiarse al instalar el sistema en el taller.
+El usuario administrador inicial se define mediante `ADMIN_EMAIL` y
+`ADMIN_PASSWORD`. El proyecto no publica contraseñas predeterminadas.
 
 ## Autenticación
 
 `POST /api/auth/login`
 
 ```json
-{ "email": "admin@taller.com", "password": "admin123" }
+{ "email": "<ADMIN_EMAIL>", "password": "<ADMIN_PASSWORD>" }
 ```
 
 Enviar el token en las demás solicitudes:

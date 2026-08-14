@@ -7,6 +7,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.web.csrf.CsrfToken;
 import java.time.*;
 import java.util.*;
 
@@ -16,6 +17,7 @@ public class AuthController {
   public AuthController(AuthenticationManager a, JwtEncoder e, UserRepository u) { authenticationManager=a; encoder=e; users=u; }
   public record LoginRequest(@Email String email, @NotBlank String password) {}
   public record LoginResponse(String token, Instant expiresAt, UUID id, String name, String email, String role) {}
+  @GetMapping("/csrf") public Map<String, String> csrf(CsrfToken token) { return Map.of("token", token.getToken()); }
   @PostMapping("/login") public LoginResponse login(@Valid @RequestBody LoginRequest request) {
     Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
     var user = users.findByEmailIgnoreCase(auth.getName()).orElseThrow(); var now = Instant.now(); var expiry = now.plus(Duration.ofHours(10));

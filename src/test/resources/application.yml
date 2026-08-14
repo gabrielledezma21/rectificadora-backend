@@ -11,3 +11,5 @@ spring:
 app:
   jwt-secret: esta-es-una-clave-de-pruebas-con-mas-de-32-caracteres
   cors-origins: http://localhost:5173
+  admin-email: administrador@pruebas.local
+  admin-password: clave-segura-solo-para-pruebas
