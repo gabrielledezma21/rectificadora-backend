@@ -20,8 +20,8 @@ import java.util.UUID;
 @RequestMapping("/api/workshop")
 public class HistorialTareasEmpleadoController {
 
-  private static final Set<Enums.WorkTaskAction> ACCIONES_HISTORIAL_EMPLEADO =
-      EnumSet.of(Enums.WorkTaskAction.FINALIZADA, Enums.WorkTaskAction.PAUSADA);
+  private static final Set<Enums.AccionTareaTaller> ACCIONES_HISTORIAL_EMPLEADO =
+      EnumSet.of(Enums.AccionTareaTaller.FINALIZADA, Enums.AccionTareaTaller.PAUSADA);
 
   private final RepositorioHistorialTareas repositorioHistorial;
   private final UserRepository repositorioUsuarios;
@@ -38,10 +38,10 @@ public class HistorialTareasEmpleadoController {
       UUID idOrden,
       String numeroOrden,
       ApiDtos.VehicleView vehiculo,
-      Enums.WorkTaskAction accion,
+      Enums.AccionTareaTaller accion,
       Instant fecha,
       String comentario,
-      Enums.WorkTaskStatus estadoActual) {
+      Enums.EstadoTareaTaller estadoActual) {
   }
 
   @GetMapping("/mi-historial")
@@ -54,18 +54,18 @@ public class HistorialTareasEmpleadoController {
 
     return repositorioHistorial.buscarHistorialEmpleado(empleado.id, ACCIONES_HISTORIAL_EMPLEADO).stream()
         .map(evento -> {
-          var tarea = evento.workOrderItem;
-          var orden = tarea.workOrder;
+          var tarea = evento.itemOrdenTrabajo;
+          var orden = tarea.ordenTrabajo;
           return new VistaHistorialEmpleado(
               tarea.id,
-              tarea.description,
+              tarea.descripcion,
               orden.id,
               orden.orderNumber,
               ApiDtos.vehicle(orden.vehicle),
-              evento.action,
-              evento.occurredAt,
-              evento.comment,
-              tarea.taskStatus);
+              evento.accion,
+              evento.fecha,
+              evento.comentario,
+              tarea.estadoTarea);
         })
         .toList();
   }
