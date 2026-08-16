@@ -38,6 +38,8 @@ public class User {
   public Set<Enums.Permission> effectivePermissions() {
     if (role == Enums.Role.ADMIN)
       return EnumSet.allOf(Enums.Permission.class);
+    if (role == Enums.Role.EMPLEADO_TALLER)
+      return EnumSet.of(Enums.Permission.TAREAS_TALLER);
     return permissions.isEmpty() ? EnumSet.noneOf(Enums.Permission.class) : EnumSet.copyOf(permissions);
   }
 }

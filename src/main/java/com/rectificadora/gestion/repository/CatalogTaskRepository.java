@@ -6,4 +6,5 @@ import java.util.*;
 
 public interface CatalogTaskRepository extends JpaRepository<CatalogTask, UUID> {
     List<CatalogTask> findByActiveTrueOrderByCategoryAscNameAsc();
+    List<CatalogTask> findAllByOrderByCategoryAscNameAsc();
 }

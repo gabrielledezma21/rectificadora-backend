@@ -19,8 +19,16 @@ final class ApiDtos {
   record TaskView(UUID id, String name, Enums.TaskCategory category, BigDecimal price, boolean active) {
   }
 
+  record EmployeeView(UUID id, String name) {
+  }
+
+  record TaskHistoryView(UUID id, Instant occurredAt, Enums.WorkTaskAction action, String actor,
+      UUID employeeId, String employeeName, String comment) {
+  }
+
   record ItemView(UUID id, TaskView catalogTask, String description, Enums.TaskCategory category, BigDecimal unitPrice,
-      int quantity) {
+      int quantity, Enums.WorkTaskStatus taskStatus, EmployeeView assignedEmployee, Instant acceptedAt,
+      Instant startedAt, Instant completedAt, String technicalNotes, List<TaskHistoryView> history) {
   }
 
   record PaymentView(UUID id, Instant paidAt, BigDecimal amount, Enums.PaymentMethod method, String details,
@@ -56,7 +64,11 @@ final class ApiDtos {
   }
 
   static ItemView item(WorkOrderItem i) {
-    return new ItemView(i.id, task(i.catalogTask), i.description, i.category, i.unitPrice, i.quantity);
+    var employee = i.assignedEmployee == null ? null : new EmployeeView(i.assignedEmployee.id, i.assignedEmployee.name);
+    var history = i.history.stream().map(h -> new TaskHistoryView(h.id, h.occurredAt, h.action, h.actor,
+        h.employeeId, h.employeeName, h.comment)).toList();
+    return new ItemView(i.id, task(i.catalogTask), i.description, i.category, i.unitPrice, i.quantity,
+        i.taskStatus, employee, i.acceptedAt, i.startedAt, i.completedAt, i.technicalNotes, history);
   }
 
   static PaymentView payment(Payment p) {
