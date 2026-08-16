@@ -98,9 +98,13 @@ public class WorkOrderController {
   public ApiDtos.OrderView status(@PathVariable UUID id, @RequestParam Enums.OrderStatus value, Authentication auth) {
     var w = orders.findById(id).orElseThrow();
     ensureCanView(w, auth);
+    validarCambioEstado(w, value);
+    if (w.status == value)
+      return ApiDtos.order(w, canViewClientHistory(auth));
+    var estadoAnterior = w.status;
     w.status = value;
     w = orders.save(w);
-    audit.record("STATUS", "ORDER", w.id, w.orderNumber + " -> " + value);
+    audit.record("STATUS", "ORDER", w.id, w.orderNumber + " · " + estadoAnterior + " -> " + value);
     return ApiDtos.order(w, canViewClientHistory(auth));
   }
 
@@ -153,10 +157,12 @@ public class WorkOrderController {
   }
 
   private WorkOrder apply(WorkOrder w, OrderInput in) {
+    boolean esNueva = w.orderNumber == null;
     w.client = clients.findById(in.clientId()).orElseThrow();
     w.vehicle = in.vehicleId() == null ? null : vehicles.findById(in.vehicleId()).orElseThrow();
     w.promisedDate = in.promisedDate();
-    w.status = in.status();
+    if (esNueva)
+      w.status = Enums.OrderStatus.RECEPCION;
     w.cylinders = in.cylinders();
     w.finalMeasure = in.finalMeasure();
     w.receptionDescription = in.receptionDescription();
@@ -192,6 +198,34 @@ public class WorkOrderController {
     w.items.removeAll(removed);
     w.total = total;
     return w;
+  }
+
+  private void validarCambioEstado(WorkOrder orden, Enums.OrderStatus nuevoEstado) {
+    if (orden.status == nuevoEstado)
+      return;
+
+    boolean transicionValida = switch (orden.status) {
+      case RECEPCION -> nuevoEstado == Enums.OrderStatus.EN_PROCESO
+          || nuevoEstado == Enums.OrderStatus.CANCELADO;
+      case EN_PROCESO -> nuevoEstado == Enums.OrderStatus.FINALIZADO
+          || nuevoEstado == Enums.OrderStatus.CANCELADO;
+      case FINALIZADO -> nuevoEstado == Enums.OrderStatus.ENTREGADO
+          || nuevoEstado == Enums.OrderStatus.EN_PROCESO
+          || nuevoEstado == Enums.OrderStatus.CANCELADO;
+      case ENTREGADO, CANCELADO -> false;
+    };
+
+    if (!transicionValida)
+      throw new IllegalArgumentException("El cambio de estado solicitado no corresponde al flujo de la orden");
+
+    if (nuevoEstado == Enums.OrderStatus.FINALIZADO) {
+      if (orden.items.isEmpty())
+        throw new IllegalArgumentException("La orden debe tener al menos una tarea antes de poder finalizarla");
+      boolean todasFinalizadas = orden.items.stream()
+          .allMatch(item -> item.estadoTarea == Enums.EstadoTareaTaller.FINALIZADA);
+      if (!todasFinalizadas)
+        throw new IllegalArgumentException("No se puede finalizar la orden mientras queden tareas sin terminar");
+    }
   }
 
   private String nextNumber() {
