@@ -22,12 +22,12 @@ final class ApiDtos {
   record EmployeeView(UUID id, String name) {
   }
 
-  record TaskHistoryView(UUID id, Instant occurredAt, Enums.WorkTaskAction action, String actor,
+  record TaskHistoryView(UUID id, Instant occurredAt, Enums.AccionTareaTaller action, String actor,
       UUID employeeId, String employeeName, String comment) {
   }
 
   record ItemView(UUID id, TaskView catalogTask, String description, Enums.TaskCategory category, BigDecimal unitPrice,
-      int quantity, Enums.WorkTaskStatus taskStatus, EmployeeView assignedEmployee, Instant acceptedAt,
+      int quantity, Enums.EstadoTareaTaller taskStatus, EmployeeView assignedEmployee, Instant acceptedAt,
       Instant startedAt, Instant completedAt, String technicalNotes, List<TaskHistoryView> history) {
   }
 
@@ -63,12 +63,12 @@ final class ApiDtos {
     return t == null ? null : new TaskView(t.id, t.name, t.category, t.price, t.active);
   }
 
-  static ItemView item(WorkOrderItem i) {
-    var employee = i.assignedEmployee == null ? null : new EmployeeView(i.assignedEmployee.id, i.assignedEmployee.name);
-    var history = i.history.stream().map(h -> new TaskHistoryView(h.id, h.occurredAt, h.action, h.actor,
-        h.employeeId, h.employeeName, h.comment)).toList();
-    return new ItemView(i.id, task(i.catalogTask), i.description, i.category, i.unitPrice, i.quantity,
-        i.taskStatus, employee, i.acceptedAt, i.startedAt, i.completedAt, i.technicalNotes, history);
+  static ItemView item(ItemOrdenTrabajo i) {
+    var employee = i.empleadoAsignado == null ? null : new EmployeeView(i.empleadoAsignado.id, i.empleadoAsignado.name);
+    var history = i.historial.stream().map(h -> new TaskHistoryView(h.id, h.fecha, h.accion, h.actor,
+        h.idEmpleado, h.nombreEmpleado, h.comentario)).toList();
+    return new ItemView(i.id, task(i.tareaCatalogo), i.descripcion, i.categoria, i.precioUnitario, i.cantidad,
+        i.estadoTarea, employee, i.fechaAceptacion, i.fechaInicio, i.fechaFinalizacion, i.notasTecnicas, history);
   }
 
   static PaymentView payment(Payment p) {
