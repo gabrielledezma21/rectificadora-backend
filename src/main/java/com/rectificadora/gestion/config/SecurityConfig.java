@@ -41,6 +41,7 @@ public class SecurityConfig {
     config.setMaxAge(3600L);
     var source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/api/**", config);
+    source.registerCorsConfiguration("/v3/api-docs/**", config);
     return source;
   }
 
@@ -62,7 +63,10 @@ public class SecurityConfig {
         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         .ignoringRequestMatchers("/api/auth/login"))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/health").permitAll()
+        .authorizeHttpRequests(a -> a
+            .requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/health", "/v3/api-docs/**",
+                "/swagger-ui/**", "/swagger-ui.html")
+            .permitAll()
             .anyRequest().authenticated())
         .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
           var roles = jwt.getClaimAsStringList("roles");
