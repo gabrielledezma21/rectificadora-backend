@@ -85,6 +85,7 @@ public class WorkOrderController {
   @Transactional
   public ApiDtos.OrderView update(@PathVariable UUID id, @Valid @RequestBody OrderInput in, Authentication auth) {
     var w = orders.findById(id).orElseThrow();
+    ensureCanView(w, auth);
     w.items.clear();
     apply(w, in);
     w = orders.save(w);
@@ -97,6 +98,7 @@ public class WorkOrderController {
   @Transactional
   public ApiDtos.OrderView status(@PathVariable UUID id, @RequestParam Enums.OrderStatus value, Authentication auth) {
     var w = orders.findById(id).orElseThrow();
+    ensureCanView(w, auth);
     w.status = value;
     w = orders.save(w);
     audit.record("STATUS", "ORDER", w.id, w.orderNumber + " -> " + value);
@@ -109,6 +111,7 @@ public class WorkOrderController {
   public ApiDtos.OrderView pay(@PathVariable UUID id, @Valid @RequestBody PaymentInput in,
       java.security.Principal principal, Authentication auth) {
     var w = orders.findById(id).orElseThrow();
+    ensureCanView(w, auth);
     if (in.amount().compareTo(w.getBalance()) > 0)
       throw new IllegalArgumentException("El pago supera el saldo pendiente");
     if (!isAdmin(auth) && in.method() != Enums.PaymentMethod.EFECTIVO)
