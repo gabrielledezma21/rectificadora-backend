@@ -89,13 +89,13 @@ public class DatosDemostracionConfig {
     orden.paid = BigDecimal.valueOf(pagado);
     for (String nombre : nombresTareas) {
       var catalogada = catalogo.get(nombre);
-      var item = new WorkOrderItem();
-      item.workOrder = orden;
-      item.catalogTask = catalogada;
-      item.description = nombre;
-      item.category = catalogada == null ? Enums.TaskCategory.OTRO : catalogada.category;
-      item.unitPrice = catalogada == null ? BigDecimal.ZERO : catalogada.price;
-      item.quantity = 1;
+      var item = new ItemOrdenTrabajo();
+      item.ordenTrabajo = orden;
+      item.tareaCatalogo = catalogada;
+      item.descripcion = nombre;
+      item.categoria = catalogada == null ? Enums.TaskCategory.OTRO : catalogada.category;
+      item.precioUnitario = catalogada == null ? BigDecimal.ZERO : catalogada.price;
+      item.cantidad = 1;
       orden.items.add(item);
     }
     if (pagado > 0) {
