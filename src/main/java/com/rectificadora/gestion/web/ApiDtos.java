@@ -24,7 +24,7 @@ final class ApiDtos {
   }
 
   record PaymentView(UUID id, Instant paidAt, BigDecimal amount, Enums.PaymentMethod method, String details,
-      String registeredBy) {
+      String registeredBy, Instant cancelledAt, String cancelledBy, String cancellationReason) {
   }
 
   record OrderView(UUID id, String orderNumber, Instant createdAt, LocalDate promisedDate, ClientView client,
@@ -33,7 +33,8 @@ final class ApiDtos {
       List<ItemView> items, List<PaymentView> payments, long version) {
   }
 
-  record UserView(UUID id, String name, String email, Enums.Role role, boolean active, Instant createdAt) {
+  record UserView(UUID id, String name, String email, Enums.Role role, Set<Enums.Permission> permissions,
+      boolean active, Instant createdAt) {
   }
 
   static VehicleView vehicle(Vehicle v) {
@@ -42,6 +43,11 @@ final class ApiDtos {
 
   static ClientView client(Client c) {
     return new ClientView(c.id, c.name, c.phone, c.email, c.address, c.createdAt,
+        c.vehicles.stream().map(ApiDtos::vehicle).toList());
+  }
+
+  static ClientView basicClient(Client c) {
+    return new ClientView(c.id, c.name, c.phone, null, null, c.createdAt,
         c.vehicles.stream().map(ApiDtos::vehicle).toList());
   }
 
@@ -54,16 +60,22 @@ final class ApiDtos {
   }
 
   static PaymentView payment(Payment p) {
-    return new PaymentView(p.id, p.paidAt, p.amount, p.method, p.details, p.registeredBy);
+    return new PaymentView(p.id, p.paidAt, p.amount, p.method, p.details, p.registeredBy,
+        p.cancelledAt, p.cancelledBy, p.cancellationReason);
   }
 
   static OrderView order(WorkOrder w) {
-    return new OrderView(w.id, w.orderNumber, w.createdAt, w.promisedDate, client(w.client), vehicle(w.vehicle),
+    return order(w, true);
+  }
+
+  static OrderView order(WorkOrder w, boolean sensitiveClientData) {
+    return new OrderView(w.id, w.orderNumber, w.createdAt, w.promisedDate,
+        sensitiveClientData ? client(w.client) : basicClient(w.client), vehicle(w.vehicle),
         w.status, w.cylinders, w.finalMeasure, w.receptionDescription, w.notes, w.total, w.paid, w.getBalance(),
         w.items.stream().map(ApiDtos::item).toList(), w.payments.stream().map(ApiDtos::payment).toList(), w.version);
   }
 
   static UserView user(User u) {
-    return new UserView(u.id, u.name, u.email, u.role, u.active, u.createdAt);
+    return new UserView(u.id, u.name, u.email, u.role, u.effectivePermissions(), u.active, u.createdAt);
   }
 }

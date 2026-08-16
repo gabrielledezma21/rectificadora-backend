@@ -26,7 +26,7 @@ public class UserController {
   }
 
   public record Input(@NotBlank String name, @Email String email, String password, @NotNull Enums.Role role,
-      boolean active) {
+      Set<Enums.Permission> permissions, boolean active) {
   }
 
   @GetMapping
@@ -76,6 +76,9 @@ public class UserController {
     u.name = i.name();
     u.email = i.email().toLowerCase();
     u.role = i.role();
+    u.permissions.clear();
+    if (i.role() != Enums.Role.ADMIN && i.permissions() != null)
+      u.permissions.addAll(i.permissions());
     u.active = i.active();
     return u;
   }

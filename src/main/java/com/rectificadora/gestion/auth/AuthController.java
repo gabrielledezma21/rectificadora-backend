@@ -1,6 +1,7 @@
 package com.rectificadora.gestion.auth;
 
 import com.rectificadora.gestion.repository.UserRepository;
+import com.rectificadora.gestion.domain.Enums;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.security.authentication.*;
@@ -27,7 +28,8 @@ public class AuthController {
   public record LoginRequest(@Email String email, @NotBlank String password) {
   }
 
-  public record LoginResponse(String token, Instant expiresAt, UUID id, String name, String email, String role) {
+  public record LoginResponse(String token, Instant expiresAt, UUID id, String name, String email, String role,
+      Set<Enums.Permission> permissions) {
   }
 
   @GetMapping("/csrf")
@@ -43,11 +45,14 @@ public class AuthController {
     var now = Instant.now();
     var expiry = now.plus(Duration.ofHours(10));
     var claims = JwtClaimsSet.builder().issuer("gestion-ordenes").issuedAt(now).expiresAt(expiry).subject(user.email)
-        .claim("roles", List.of(user.role.name())).claim("name", user.name).build();
+        .claim("roles", List.of(user.role.name()))
+        .claim("permissions", user.effectivePermissions().stream().map(Enum::name).toList())
+        .claim("name", user.name).build();
     String token = encoder
         .encode(JwtEncoderParameters
             .from(JwsHeader.with(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256).build(), claims))
         .getTokenValue();
-    return new LoginResponse(token, expiry, user.id, user.name, user.email, user.role.name());
+    return new LoginResponse(token, expiry, user.id, user.name, user.email, user.role.name(),
+        user.effectivePermissions());
   }
 }
