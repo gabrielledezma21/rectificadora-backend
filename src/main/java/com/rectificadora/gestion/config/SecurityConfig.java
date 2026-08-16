@@ -66,10 +66,14 @@ public class SecurityConfig {
             .anyRequest().authenticated())
         .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
           var roles = jwt.getClaimAsStringList("roles");
-          var auths = roles == null ? List.<org.springframework.security.core.GrantedAuthority>of()
-              : roles.stream()
-                  .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + r))
-                  .toList();
+          var permissions = jwt.getClaimAsStringList("permissions");
+          var auths = new java.util.ArrayList<org.springframework.security.core.GrantedAuthority>();
+          if (roles != null)
+            roles.forEach(r -> auths.add(
+                new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + r)));
+          if (permissions != null)
+            permissions.forEach(p -> auths.add(
+                new org.springframework.security.core.authority.SimpleGrantedAuthority("PERM_" + p)));
           return new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt,
               auths, jwt.getSubject());
         }))).build();

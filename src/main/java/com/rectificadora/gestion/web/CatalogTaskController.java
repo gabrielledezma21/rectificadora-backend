@@ -33,7 +33,7 @@ public class CatalogTaskController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CATALOGO_GESTIONAR')")
   public CatalogTask create(@Valid @RequestBody Input i) {
     var t = apply(new CatalogTask(), i);
     t = repo.save(t);
@@ -42,7 +42,7 @@ public class CatalogTaskController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CATALOGO_GESTIONAR')")
   public CatalogTask update(@PathVariable UUID id, @Valid @RequestBody Input i) {
     var t = apply(repo.findById(id).orElseThrow(), i);
     t = repo.save(t);

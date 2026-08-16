@@ -25,6 +25,9 @@ public class Payment {
   public String details;
   @Column(nullable = false)
   public String registeredBy;
+  public Instant cancelledAt;
+  public String cancelledBy;
+  public String cancellationReason;
 
   public Payment() {
   }

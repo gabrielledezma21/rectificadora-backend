@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import jakarta.transaction.Transactional;
@@ -32,36 +33,61 @@ public class ClientController {
   }
 
   @GetMapping
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CLIENTES_DATOS_BASICOS')")
   @Transactional
-  public List<ApiDtos.ClientView> list(@RequestParam(defaultValue = "") String q) {
+  public List<ApiDtos.ClientView> list(@RequestParam(defaultValue = "") String q, Authentication auth) {
+    boolean sensitive = canViewHistory(auth);
     return (q.isBlank() ? clients.findAll() : clients.findByNameContainingIgnoreCaseOrderByName(q)).stream()
-        .map(ApiDtos::client).toList();
+        .map(c -> sensitive ? ApiDtos.client(c) : ApiDtos.basicClient(c)).toList();
   }
 
   @GetMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CLIENTES_DATOS_BASICOS')")
   @Transactional
-  public ApiDtos.ClientView get(@PathVariable UUID id) {
-    return ApiDtos.client(clients.findById(id).orElseThrow());
+  public ApiDtos.ClientView get(@PathVariable UUID id, Authentication auth) {
+    var client = clients.findById(id).orElseThrow();
+    return canViewHistory(auth) ? ApiDtos.client(client) : ApiDtos.basicClient(client);
+  }
+
+  @GetMapping("/{id}/history")
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CLIENTES_VER_HISTORIAL')")
+  @Transactional
+  public List<ApiDtos.OrderView> history(@PathVariable UUID id) {
+    if (!clients.existsById(id))
+      throw new NoSuchElementException();
+    return orders.findByClientIdOrderByCreatedAtDesc(id).stream().map(ApiDtos::order).toList();
   }
 
   @PostMapping
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CLIENTES_DATOS_BASICOS')")
   @ResponseStatus(HttpStatus.CREATED)
   @Transactional
-  public ApiDtos.ClientView create(@Valid @RequestBody ClientInput in) {
+  public ApiDtos.ClientView create(@Valid @RequestBody ClientInput in, Authentication auth) {
     var c = apply(new Client(), in);
+    if (!canViewHistory(auth)) {
+      c.email = null;
+      c.address = null;
+    }
     c = clients.save(c);
     audit.record("CREATE", "CLIENT", c.id, c.name);
-    return ApiDtos.client(c);
+    return canViewHistory(auth) ? ApiDtos.client(c) : ApiDtos.basicClient(c);
   }
 
   @PutMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasAuthority('PERM_CLIENTES_DATOS_BASICOS')")
   @Transactional
-  public ApiDtos.ClientView update(@PathVariable UUID id, @Valid @RequestBody ClientInput in) {
+  public ApiDtos.ClientView update(@PathVariable UUID id, @Valid @RequestBody ClientInput in, Authentication auth) {
     var c = clients.findById(id).orElseThrow();
+    var email = c.email;
+    var address = c.address;
     apply(c, in);
+    if (!canViewHistory(auth)) {
+      c.email = email;
+      c.address = address;
+    }
     c = clients.save(c);
     audit.record("UPDATE", "CLIENT", c.id, c.name);
-    return ApiDtos.client(c);
+    return canViewHistory(auth) ? ApiDtos.client(c) : ApiDtos.basicClient(c);
   }
 
   @DeleteMapping("/{id}")
@@ -97,5 +123,10 @@ public class ClientController {
       x.licensePlate = v.licensePlate();
     }
     return c;
+  }
+
+  private boolean canViewHistory(Authentication auth) {
+    return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+        || a.getAuthority().equals("PERM_CLIENTES_VER_HISTORIAL"));
   }
 }

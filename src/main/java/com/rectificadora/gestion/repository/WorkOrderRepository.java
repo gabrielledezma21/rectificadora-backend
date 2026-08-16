@@ -19,6 +19,8 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, UUID> {
 
   long countByClientId(UUID clientId);
 
+  List<WorkOrder> findByClientIdOrderByCreatedAtDesc(UUID clientId);
+
   @Query(value = "select nextval('work_order_number_seq')", nativeQuery = true)
   long nextOrderSequence();
 }
