@@ -34,8 +34,8 @@ public class WorkOrder {
   public BigDecimal total = BigDecimal.ZERO;
   @Column(nullable = false, precision = 14, scale = 2)
   public BigDecimal paid = BigDecimal.ZERO;
-  @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true)
-  public List<WorkOrderItem> items = new ArrayList<>();
+  @OneToMany(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true)
+  public List<ItemOrdenTrabajo> items = new ArrayList<>();
   @OneToMany(mappedBy = "workOrder", cascade = CascadeType.ALL, orphanRemoval = true)
   public List<Payment> payments = new ArrayList<>();
   @Version

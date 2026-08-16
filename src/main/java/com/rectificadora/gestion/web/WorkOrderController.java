@@ -165,29 +165,29 @@ public class WorkOrderController {
     var retained = new HashSet<UUID>();
     if (in.items() != null)
       for (var i : in.items()) {
-        WorkOrderItem x;
+        ItemOrdenTrabajo x;
         if (i.id() == null) {
-          x = new WorkOrderItem();
-          x.workOrder = w;
+          x = new ItemOrdenTrabajo();
+          x.ordenTrabajo = w;
           w.items.add(x);
         } else {
           x = w.items.stream().filter(existing -> existing.id.equals(i.id())).findFirst()
               .orElseThrow(() -> new IllegalArgumentException("La tarea no pertenece a esta orden"));
           retained.add(x.id);
-          boolean changed = !Objects.equals(x.description, i.description()) || x.category != i.category();
-          if (changed && x.taskStatus != Enums.WorkTaskStatus.DISPONIBLE)
+          boolean changed = !Objects.equals(x.descripcion, i.description()) || x.categoria != i.category();
+          if (changed && x.estadoTarea != Enums.EstadoTareaTaller.DISPONIBLE)
             throw new IllegalArgumentException("No se puede cambiar una tarea que ya fue tomada por el taller");
         }
-        x.catalogTask = i.taskId() == null ? null : tasks.findById(i.taskId()).orElse(null);
-        x.description = i.description();
-        x.category = i.category();
-        x.unitPrice = i.unitPrice();
-        x.quantity = i.quantity();
+        x.tareaCatalogo = i.taskId() == null ? null : tasks.findById(i.taskId()).orElse(null);
+        x.descripcion = i.description();
+        x.categoria = i.category();
+        x.precioUnitario = i.unitPrice();
+        x.cantidad = i.quantity();
         retained.add(x.id);
         total = total.add(i.unitPrice().multiply(BigDecimal.valueOf(i.quantity())));
       }
     var removed = w.items.stream().filter(x -> x.id != null && !retained.contains(x.id)).toList();
-    if (removed.stream().anyMatch(x -> x.taskStatus != Enums.WorkTaskStatus.DISPONIBLE || !x.history.isEmpty()))
+    if (removed.stream().anyMatch(x -> x.estadoTarea != Enums.EstadoTareaTaller.DISPONIBLE || !x.historial.isEmpty()))
       throw new IllegalArgumentException("No se puede quitar de la orden una tarea que ya tiene actividad");
     w.items.removeAll(removed);
     w.total = total;

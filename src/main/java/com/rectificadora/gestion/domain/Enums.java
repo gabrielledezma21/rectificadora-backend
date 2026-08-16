@@ -26,11 +26,11 @@ public final class Enums {
     EFECTIVO, TRANSFERENCIA, TARJETA, CHEQUE, OTRO
   }
 
-  public enum WorkTaskStatus {
+  public enum EstadoTareaTaller {
     DISPONIBLE, ASIGNADA, ACEPTADA, EN_PROCESO, PENDIENTE, FINALIZADA
   }
 
-  public enum WorkTaskAction {
+  public enum AccionTareaTaller {
     CREADA, ASIGNADA, REASIGNADA, LIBERADA, ACEPTADA, INICIADA, PAUSADA, RETOMADA, FINALIZADA, REABIERTA
   }
 }

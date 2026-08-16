@@ -32,7 +32,7 @@ public class StatisticsController {
     var billed = list.stream().map(w -> w.total).reduce(BigDecimal.ZERO, BigDecimal::add);
     var collected = list.stream().map(w -> w.paid).reduce(BigDecimal.ZERO, BigDecimal::add);
     var top = list.stream().flatMap(w -> w.items.stream())
-        .collect(Collectors.groupingBy(i -> i.description, Collectors.counting()));
+        .collect(Collectors.groupingBy(i -> i.descripcion, Collectors.counting()));
     return new Summary(list.size(), by, billed, collected, billed.subtract(collected), top);
   }
 }
