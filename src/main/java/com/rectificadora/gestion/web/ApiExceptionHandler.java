@@ -3,6 +3,7 @@ package com.rectificadora.gestion.web;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Instant;
 import java.util.*;
 
@@ -29,5 +30,12 @@ public class ApiExceptionHandler {
     String m = e.getBindingResult().getFieldErrors().stream().map(x -> x.getField() + ": " + x.getDefaultMessage())
         .findFirst().orElse("Datos inválidos");
     return new ErrorResponse(Instant.now(), 400, "Validation Error", m);
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  ErrorResponse conflict(DataIntegrityViolationException e) {
+    return new ErrorResponse(Instant.now(), 409, "Conflict",
+        "La tarea cambió mientras la estabas tomando o ya tenés otra tarea activa. Actualizá el tablero");
   }
 }

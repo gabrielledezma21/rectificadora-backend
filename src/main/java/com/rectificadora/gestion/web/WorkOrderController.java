@@ -33,7 +33,7 @@ public class WorkOrderController {
     audit = a;
   }
 
-  public record ItemInput(UUID taskId, @NotBlank String description, @NotNull Enums.TaskCategory category,
+  public record ItemInput(UUID id, UUID taskId, @NotBlank String description, @NotNull Enums.TaskCategory category,
       @NotNull @PositiveOrZero BigDecimal unitPrice, @Min(1) int quantity) {
   }
 
@@ -86,7 +86,6 @@ public class WorkOrderController {
   public ApiDtos.OrderView update(@PathVariable UUID id, @Valid @RequestBody OrderInput in, Authentication auth) {
     var w = orders.findById(id).orElseThrow();
     ensureCanView(w, auth);
-    w.items.clear();
     apply(w, in);
     w = orders.save(w);
     audit.record("UPDATE", "ORDER", w.id, w.orderNumber);
@@ -163,18 +162,34 @@ public class WorkOrderController {
     w.receptionDescription = in.receptionDescription();
     w.notes = in.notes();
     BigDecimal total = BigDecimal.ZERO;
+    var retained = new HashSet<UUID>();
     if (in.items() != null)
       for (var i : in.items()) {
-        var x = new WorkOrderItem();
-        x.workOrder = w;
+        WorkOrderItem x;
+        if (i.id() == null) {
+          x = new WorkOrderItem();
+          x.workOrder = w;
+          w.items.add(x);
+        } else {
+          x = w.items.stream().filter(existing -> existing.id.equals(i.id())).findFirst()
+              .orElseThrow(() -> new IllegalArgumentException("La tarea no pertenece a esta orden"));
+          retained.add(x.id);
+          boolean changed = !Objects.equals(x.description, i.description()) || x.category != i.category();
+          if (changed && x.taskStatus != Enums.WorkTaskStatus.DISPONIBLE)
+            throw new IllegalArgumentException("No se puede cambiar una tarea que ya fue tomada por el taller");
+        }
         x.catalogTask = i.taskId() == null ? null : tasks.findById(i.taskId()).orElse(null);
         x.description = i.description();
         x.category = i.category();
         x.unitPrice = i.unitPrice();
         x.quantity = i.quantity();
-        w.items.add(x);
+        retained.add(x.id);
         total = total.add(i.unitPrice().multiply(BigDecimal.valueOf(i.quantity())));
       }
+    var removed = w.items.stream().filter(x -> x.id != null && !retained.contains(x.id)).toList();
+    if (removed.stream().anyMatch(x -> x.taskStatus != Enums.WorkTaskStatus.DISPONIBLE || !x.history.isEmpty()))
+      throw new IllegalArgumentException("No se puede quitar de la orden una tarea que ya tiene actividad");
+    w.items.removeAll(removed);
     w.total = total;
     return w;
   }

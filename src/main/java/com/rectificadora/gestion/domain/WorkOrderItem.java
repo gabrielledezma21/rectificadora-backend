@@ -3,6 +3,9 @@ package com.rectificadora.gestion.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -26,6 +29,22 @@ public class WorkOrderItem {
   public BigDecimal unitPrice = BigDecimal.ZERO;
   @Column(nullable = false)
   public int quantity = 1;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  public Enums.WorkTaskStatus taskStatus = Enums.WorkTaskStatus.DISPONIBLE;
+  @ManyToOne
+  @JoinColumn(name = "assigned_employee_id")
+  public User assignedEmployee;
+  public Instant acceptedAt;
+  public Instant startedAt;
+  public Instant completedAt;
+  @Column(columnDefinition = "text")
+  public String technicalNotes;
+  @OneToMany(mappedBy = "workOrderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("occurredAt ASC")
+  public List<WorkTaskHistory> history = new ArrayList<>();
+  @Version
+  public long version;
 
   public WorkOrderItem() {
   }
