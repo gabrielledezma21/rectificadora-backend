@@ -19,7 +19,11 @@ public class BackupController {
 
   BackupController(ClientRepository clients, WorkOrderRepository orders, CatalogTaskRepository tasks,
       UserRepository users, AuditLogRepository audit) {
-    this.clients = clients; this.orders = orders; this.tasks = tasks; this.users = users; this.audit = audit;
+    this.clients = clients;
+    this.orders = orders;
+    this.tasks = tasks;
+    this.users = users;
+    this.audit = audit;
   }
 
   @GetMapping

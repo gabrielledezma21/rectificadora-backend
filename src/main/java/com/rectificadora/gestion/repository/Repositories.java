@@ -6,7 +6,10 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.*;
 
-public final class Repositories { private Repositories() {} }
+public final class Repositories {
+    private Repositories() {
+    }
+}
 
-interface BaseMarker {}
-
+interface BaseMarker {
+}

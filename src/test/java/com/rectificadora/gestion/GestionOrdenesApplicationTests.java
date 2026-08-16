@@ -8,7 +8,8 @@ import org.springframework.test.context.DynamicPropertySource;
 
 @SpringBootTest
 class GestionOrdenesApplicationTests {
-  private static final String CLAVE_ALEATORIA = UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "");
+  private static final String CLAVE_ALEATORIA = UUID.randomUUID().toString().replace("-", "")
+      + UUID.randomUUID().toString().replace("-", "");
 
   @DynamicPropertySource
   static void propiedades(DynamicPropertyRegistry registry) {
@@ -18,5 +19,6 @@ class GestionOrdenesApplicationTests {
   }
 
   @Test
-  void contextLoads() {}
+  void contextLoads() {
+  }
 }
