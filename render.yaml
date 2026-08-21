@@ -4,7 +4,9 @@ services:
     runtime: docker
     plan: free
     region: ohio
+    branch: deploy/demo-online
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
     envVars:
       - key: SERVER_PORT
         value: "10000"
