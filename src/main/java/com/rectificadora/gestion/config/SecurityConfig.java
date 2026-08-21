@@ -57,16 +57,10 @@ public class SecurityConfig {
   }
 
   @Bean
-  SecurityFilterChain filterChain(HttpSecurity http,
-      @Value("${app.csrf-cookie-secure:false}") boolean csrfCookieSecure) throws Exception {
-    var csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-    csrfRepository.setCookieCustomizer(cookie -> cookie
-        .sameSite(csrfCookieSecure ? "None" : "Lax")
-        .secure(csrfCookieSecure));
-
+  SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     return http.cors(cors -> {
     }).csrf(csrf -> csrf
-        .csrfTokenRepository(csrfRepository)
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         .ignoringRequestMatchers("/api/auth/login"))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(a -> a
