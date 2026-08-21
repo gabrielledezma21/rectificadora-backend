@@ -2,7 +2,7 @@ name: Verificar backend
 
 on:
   push:
-    branches: [main]
+    branches: [main, deploy/demo-online]
   pull_request:
 
 jobs:
